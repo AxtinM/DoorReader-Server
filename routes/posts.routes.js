@@ -32,8 +32,12 @@ router.post("/register", async (req, res) => {
 router.get("/:rfid", async (req, res) => {
   Post.find({ rfid: req.params.rfid }, function (err, rfid) {
     if (err) res.send(err);
-
-    res.json(rfid);
+    if (rfid.length > 0) {
+      res.json(rfid);
+    } else {
+      res.status(500);
+      res.send("error");
+    }
   });
 });
 

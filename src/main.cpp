@@ -1,204 +1,143 @@
 #include <SPI.h>
+#include <MFRC522.h>
 #include <ESP8266WiFi.h>
-#include <PubSubClient.h>
 #include <Arduino.h>
-#include <DNSServer.h>
-#include <WiFiManager.h>
-#include <ArduinoJson.h>
+#include <ESP8266HTTPClient.h>
+// #include <ArduinoJson.h>
 
-String ssid_s = ""; 
-String password_s = "";
- //Enter your Wi-Fi credentials
-const char* ssid = ssid_s.c_str(); 
-const char* password = password_s.c_str(); 
+//Enter your Wi-Fi credentials
+#define WIFI_SSID "Robotika"
+#define WIFI_PASS "Robotika2121"
 
-// MQTT Broker
-const char *mqtt_broker = "141.94.175.18";
-const char *topic = "door_lock";
-const char *mqtt_username = "robotika";
-const char *mqtt_password = "robotika";
-const int mqtt_port = 1883;
+// Set AP credentials
+#define AP_SSID "ESP8266"
+#define AP_PASS "myesp2021"
 
-WiFiClient espClient;
-PubSubClient client(espClient);
-void callback(char *topic, byte *payload, unsigned int length) {
-  String str;
-  Serial.print("Message arrived in topic: ");
-  Serial.println(topic);
-  Serial.print("Message:");
-  for (unsigned int i = 0; i < length; i++) {
-      Serial.print((char) payload[i]);
-      str[i] += (char)payload[i];
-  }
-  Serial.println();
-  Serial.println("-----------------------");
-}
-// void BT() {
-//   const uint8_t* point = esp_bt_dev_get_address();
-
-//   for (int i = 0; i < 6; i ++) {
-//     char[3];
-//     sprintf(str, "%02X", (int)point[i]);
-//     Serial.print(str);
-//     if (i < 5) {
-//       Serial.print(":");
-//     }
-//   }
-// }
-
-// BluetoothSerial SerialB;
-
- String str = "";
-String tagContent = "aaaaaaaaa";
-WiFiClient espClient;
-PubSubClient client(espClient);
-void callback(char *topic, byte *payload, unsigned int length) {
-  
-  Serial.print("Message arrived in topic: ");
-  Serial.println(topic);
-  Serial.print("Message:");
-  for (unsigned int i = 0; i < length; i++) {
-      Serial.print((char) payload[i]); 
-      str[i] += (char)payload[i];
-  }
-  Serial.println();
-  Serial.println("-----------------------");
-    const size_t capacity = JSON_ARRAY_SIZE(2)
-                      + 2*JSON_OBJECT_SIZE(3)
-                      + 4*JSON_OBJECT_SIZE(1);  
-  DynamicJsonDocument doc(capacity) ;  
-
-  const char* input = "{\"rfid\":\"0aaaaaaaa\",\"mac_wifi\":\"4eeeeeee\"}";
-  
-  DeserializationError error  = deserializeJson(doc,payload, length);
-  if (error) {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.c_str());
-    return ;
-    
-  }else {
-    const char* rfid = doc["rfid"];
-    const char* mac_wifi = doc["mac_wifi"];
-    Serial.print(rfid);
-
-}
-
-// void BT() {
-//   const uint8_t* point = esp_bt_dev_get_address();
-
-//   for (int i = 0; i < 6; i ++) {
-//     char[3];
-//     sprintf(str, "%02X", (int)point[i]);
-//     Serial.print(str);
-//     if (i < 5) {
-//       Serial.print(":");
-//     }
-//   }
-// }
-
-// BluetoothSerial SerialB;
-
-
-  // SerialB();
-  // connecting to a WiFi network
-void mqtt(const char *mqtt_broker, const char *topic,const char *mqtt_username,const char *mqtt_password,const int mqtt_port ,const char *ssid, const char *password) {
- 
-
-  //connecting to a mqtt broker
-  client.setServer(mqtt_broker, mqtt_port);
-  client.setCallback(callback );
-  while (!client.connected()) {
-      String mac_bt = "esp8266-client-";
-      mac_bt += String(WiFi.macAddress());
-      Serial.printf("The client %s connects to the public mqtt broker\n", mac_bt.c_str());
-      // BT();
-      if (client.connect(mac_bt.c_str(), mqtt_username, mqtt_password)) {
-          Serial.println("Robotika mqtt broker connected");
-      } else {
-          Serial.print("failed with state ");
-          Serial.print(client.state());
-          delay(2000);
-      }
-  }
-  // publish and subscribe
-  //client.publish(topic, "verifying");
-  client.subscribe(topic);
-}
-String get_wifi(void){
-    Serial.println("");
-   /* Set ESP32 to Wi-Fi Station mode */
-  WiFi.mode(WIFI_STA);
- //Erases Previous Wi-Fi Configuration. It erases Wi-Fi config at ESP reset
-  WiFi.disconnect();  //Comment this line in practical application
-
-//Without this line it will not connect to Wi-Fi
-  WiFi.begin();         //Connect to Wi-Fi
-  //Display Previously Stored SSID and PASSWORD
-  Serial.print("Local Stored SSID:");
-  Serial.println(WiFi.SSID());
-  Serial.print("Local Stored Password:"); 
-  Serial.println(WiFi.psk());
-    if(WiFi.SSID() == "" && ssid_s == "" )
-    {
-        //Start Smart Config
-      WiFi.beginSmartConfig();
-        //Wait for SmartConfig packet from mobile
-      Serial.println("Waiting for SmartConfig.");
-  //If Wi-Fi connects stop smart config
-      while (WiFi.status() != WL_CONNECTED) {  
-        delay(500);
-        Serial.print(".");
-      }
-        Serial.println("");
-        Serial.println("SmartConfig done.");
-    }
-    else
-    {
-      Serial.println("Connecting with previously stored configuration");
-      while(WiFi.status() != WL_CONNECTED)
-      {
-        Serial.print(".");
-        delay(500);
-      }
-    }
-     //Enter your Wi-Fi credentials
-    ssid_s = WiFi.SSID(); 
-    password_s = WiFi.psk(); 
-    Serial.println("");
-    //Print Wi-Fi SSID 
-    Serial.println("");
-    Serial.print("Connected to ");
-    Serial.println(WiFi.SSID());
-    //Print connected network password
-    Serial.print("Password:");
-    Serial.println(WiFi.psk());
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
-    Serial.print("Connected to const char");
-    Serial.print(ssid_s.c_str());
-    return (ssid_s.c_str(),WiFi.psk(),WiFi.localIP())
-}
-bool isUserAuthorized(String tagContent, String rfid) {
-    bool is_authorized = false;
-
-    if (rfid == tagContent.c_str()){
-      if(mac_wifi in )
-    }
-    else Serial.print("Not authorized");
-}
+#define IP "192.168.100.35"
+#define RST_PIN         D3         // Configurable, see typical pin layout above
+#define SS_PIN          D8        // Configurable, see typical pin layout above
+#define open            D1   
+MFRC522 rfid(SS_PIN, RST_PIN);  // Create MFRC522 instance
+MFRC522::MIFARE_Key key;
+// Init array that will store new NUID
+String tag;
+String tagCheck;
+String macAdd;
+WiFiClient client;
+boolean repeat;
+String httpCheck(String tag, boolean repeat);
+String rfidCheck(String tagCheck);
 void setup() {
-  // Set software serial baud to 115200;
-  WiFi.begin(ssid, password);
-  Serial.begin(115200);
+	
+  Serial.begin(115200);		// Initialize serial communications with the PC
+	SPI.begin();			// Init SPI bus
+	rfid.PCD_Init();		// Init MFRC522
+  Serial.print(F("Reader :"));
+	rfid.PCD_DumpVersionToSerial();	// Show details of PCD - MFRC522 Card Reader details
+  
+  // Connecting to WiFi...
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  Serial.print("Connecting to ");
+  Serial.print(WIFI_SSID);
 
   while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
+      delay(2000);
       Serial.println("Connecting to WiFi..");
   }  
-  Serial.println("Connected to the WiFi network");
   
+  Serial.print("Connected! IP address: ");
+  Serial.println(WiFi.localIP());
+
+  Serial.println("Opening Access Point");
+  WiFi.softAP(AP_SSID, AP_PASS);
+
+  Serial.print("IP address for ");
+  Serial.print(AP_SSID);
+  Serial.print(" : ");
+  Serial.print(WiFi.softAPIP());
+  
+  uint8_t macAddr[6];
+  WiFi.softAPmacAddress(macAddr);
+  Serial.printf("\nWith MAC address = %02x:%02x:%02x:%02x:%02x:%02x\n", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
+  tagCheck = "";
+  pinMode(open, OUTPUT);
+
+}
+ 
+void loop() {
+  
+ tag = rfidCheck(tagCheck);
+ if (tagCheck == tag) {
+   repeat = false;
+  } else { 
+   repeat = true;
+  }
+  macAdd = httpCheck(tag, repeat);
+
+if (macAdd == "04:8C:9A:A8:49:F3" && repeat) { 
+  Serial.println("Access Granted");
+  for (int i = 0; i < 3; i++) {
+  tone(open, 1600, 100);
+  delay(300);
+  }
+  tone(open, 2000, 600);
+ }
+
+if (macAdd != "04:8C:9A:A8:49:F3" && repeat) {
+  Serial.println("Access Denied");
+  for (int i = 0; i < 3; i++) {
+    tone(open, 1600, 100);
+    delay(300);
+  } 
+  tone(open, 800, 600);
+}
+ tag = "";
+ macAdd = "";
+ rfid.PICC_HaltA();
+ rfid.PCD_StopCrypto1();
 }
 
 
-void loop(void){
-} 
+
+
+
+String httpCheck(String tag, boolean repeat){
+ HTTPClient http;
+ http.begin(client, "http://192.168.100.35:8080/api/" + tag); //HTTP
+ int code = http.GET();
+  if (repeat == true) {
+    if (code > 0) {
+        // HTTP header has been send and Server response header has been handled
+        Serial.printf("[HTTP] GET... code: %d\n", code);
+
+        // rfid found at server
+        if (code == 200) {
+          const String& payload = http.getString();
+          macAdd = payload.substring(payload.indexOf("fi\"")+5, payload.indexOf("user")-3);
+        }
+      } else {
+        Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(code).c_str());
+        macAdd = "";
+      }
+  }
+  http.end();
+  
+  return macAdd;
+}
+
+String rfidCheck(String tagCheck) {
+  // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
+ if (! rfid.PICC_IsNewCardPresent())
+    return "";
+ // Verify if the NUID has been readed
+ if (rfid.PICC_ReadCardSerial()) {
+   for (byte i = 0; i < 4; i++){ 
+     tag += rfid.uid.uidByte[i];
+   }
+ }
+ Serial.println("tag check : " + tag);
+ if (! (tagCheck == tag)){
+   tagCheck = tag;
+ }
+ return tag;
+}
