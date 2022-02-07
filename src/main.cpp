@@ -6,15 +6,15 @@
 // #include <ArduinoJson.h>
 
 //Enter your Wi-Fi credentials
-#define WIFI_SSID "Robotika"
-#define WIFI_PASS "Robotika2121"
+#define WIFI_SSID "micky"
+#define WIFI_PASS "12345678"
 
 // Set AP credentials
 #define AP_SSID "ESP8266"
 #define AP_PASS "myesp2021"
 
-#define IP "192.168.100.35"
-#define RST_PIN         D3         // Configurable, see typical pin layout above
+// #define IP "192.168.100.82"
+#define RST_PIN         D0         // Configurable, see typical pin layout above
 #define SS_PIN          D8        // Configurable, see typical pin layout above
 #define open            D1   
 MFRC522 rfid(SS_PIN, RST_PIN);  // Create MFRC522 instance
@@ -29,7 +29,7 @@ String httpCheck(String tag, boolean repeat);
 String rfidCheck(String tagCheck);
 void setup() {
 	
-  Serial.begin(115200);		// Initialize serial communications with the PC
+  Serial.begin(9600);		// Initialize serial communications with the PC
 	SPI.begin();			// Init SPI bus
 	rfid.PCD_Init();		// Init MFRC522
   Serial.print(F("Reader :"));
@@ -67,6 +67,7 @@ void setup() {
 void loop() {
   
  tag = rfidCheck(tagCheck);
+ Serial.println(tag);
  if (tagCheck == tag) {
    repeat = false;
   } else { 
@@ -98,12 +99,9 @@ if (macAdd != "04:8C:9A:A8:49:F3" && repeat) {
 }
 
 
-
-
-
 String httpCheck(String tag, boolean repeat){
  HTTPClient http;
- http.begin(client, "http://192.168.100.35:8080/api/" + tag); //HTTP
+ http.begin(client, "http://192.168.100.82:8080/api/" + tag); //HTTP
  int code = http.GET();
   if (repeat == true) {
     if (code > 0) {
