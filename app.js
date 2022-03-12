@@ -4,19 +4,20 @@ var app = express();
 // const cors = require("cors");
 require("dotenv/config");
 
+// DB_CONNECTION
+require("./models/db");
+
+// Port to listen on
+const port = process.env.PORT;
+
 const bodyParser = require("body-parser");
-const postsRoute = require("./routes/posts.routes");
+const apiRoutes = require("./routes");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.use("/api", postsRoute);
+app.use("/api", apiRoutes);
 
-//connect toDB
-mongoose.connect(process.env.DB_CONNECTION, { useNewUrlParser: true }, () =>
-  console.log("connected to DB!")
-);
-
-const server = app.listen(8080, function () {
+const server = app.listen(port, function () {
   console.log("app running on port.", server.address().port);
 });
