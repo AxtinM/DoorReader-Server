@@ -35,12 +35,14 @@ exports.loginUserController = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
+    if (!user) throw new Error(`User not found with this email`);
     const pass = await user.comparePassword(password);
     if (!pass) throw new Error("Password or Email not valid");
     let oldTokens = user.tokens || [];
     if (oldTokens.length) {
-      oldTokens.filter((token) => {
-        if (Date.now() - parseInt(token.signedAt) / 1000 < 86400) return true;
+      oldTokens = oldTokens.filter((token) => {
+        const timeDiff = Date.now() - parseInt(token.signedAt) / 1000;
+        if (timeDiff < 86400) return true;
       });
     }
 

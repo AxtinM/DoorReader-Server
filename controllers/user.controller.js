@@ -1,5 +1,6 @@
 const User = require("../models/user.model");
 const Device = require("../models/device.model");
+
 exports.allUserController = async (req, res) => {
   try {
     const user = req.user;

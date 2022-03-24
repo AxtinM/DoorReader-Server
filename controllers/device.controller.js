@@ -50,8 +50,6 @@ exports.addDeviceController = async (req, res) => {
     });
 
     device.save();
-    console.log(device);
-
     user.devices.push(device._id);
     user.save();
 
@@ -69,12 +67,13 @@ exports.removeDeviceController = async (req, res) => {
   try {
     const { macAddress } = req.body;
     if (!macAddress) throw new Error("must provide a MAC address");
-    console.log(macAddress);
-    const querry = await Device.findOneAndRemove({ macAddress: macAddress });
+    // console.log(macAddress);
+    const device = await Device.findOne({ macAddress: macAddress });
+    await Device.deleteOne({ _id: device._id });
     res.status(200).send({
       status: true,
       message: "device removed successfully",
-      data: querry,
+      data: device,
     });
   } catch (err) {
     res.status(500).send({ status: false, message: err.message });
@@ -84,11 +83,7 @@ exports.removeDeviceController = async (req, res) => {
 exports.addUserAccessToDeviceController = async (req, res) => {
   try {
     const { identifier, macAddress } = req.body;
-    const decoded = jwt.decode(
-      req.headers.authorization.split(" ")[1],
-      process.env.JWT_SECRET
-    );
-    const user = await User.findById(decoded.userId);
+    const user = req.user;
     const device = await Device.findOne({ macAddress });
     const isUser = device.users.filter(
       (d) => d.id == user._id && d.role == "owner"
