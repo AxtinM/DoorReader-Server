@@ -11,9 +11,11 @@ exports.allDevicesController = async (req, res) => {
       for (j in data[i].users) {
         const u = data[i].users[j];
         const checkUser = await User.findById(u.id);
-        if (checkUser.identifier == user.identifier) {
-          newArr.push(data[i]);
-        }
+        if(checkUser){
+          if (checkUser.identifier == user.identifier) {
+            newArr.push(data[i]);
+          }
+      }
       }
     }
     res.status(200).send({ status: true, data: newArr });

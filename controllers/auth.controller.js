@@ -52,11 +52,34 @@ exports.loginUserController = async (req, res) => {
     await User.findByIdAndUpdate(user._id, {
       tokens: [...oldTokens, { token: token, signedAt: Date.now().toString() }],
     });
+/**
+ * "__v": 29,
+    "_id": "622f2b5d3d0260fa4d356f2f",
+    "devices": Array [
+      "622f3e8c874d151eb2b59233",
+      "622f3eb0874d151eb2b59238",
+    ],
+    "email": "a@m.com",
+    "fname": "med",
+    "identifier": "U56787",
+    "lname": "attig",
+    "password": "$argon2i$v=19$m=4096,t=3,p=1$weZaJfnLO3wYObILBRNcWQ$gfq4GVNH827TNjA8EWaRyRtb/u0myCuinRD2wPNEdWU",
+    "rfidCard": Array [],
+    "tokens": Array [
+      Object {
+        "signedAt": "1648119901613",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjJmMmI1ZDNkMDI2MGZhNGQzNTZmMmYiLCJpYXQiOjE2NDgxMTk5MDEsImV4cCI6MTY0ODIwNjMwMX0.HVvTcLRdknQoh0b7UxhWF_CrwMm2JG8dX7ueA8Z7R2o",
+      },
+    ],
+    "users": Array [],
 
-    res
-      .status(200)
-      .send({ status: true, message: "Logged In Succesfully", jwt: token });
-  } catch (err) {
+ */
+
+    const data = { email: user.email, identifier: user.identifier, fname: user.fname, lname: user.lname, devices: user.devices, rfidCard: user.rfidCard, users: user.users  }
+  res
+    .status(200)
+    .send({ status: true, message: "Logged In Succesfully", jwt: token, data: data});
+     } catch (err) {
     console.log(err);
     res.status(500).send({ status: false, message: err });
   }
