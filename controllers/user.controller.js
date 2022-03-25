@@ -16,15 +16,16 @@ exports.allUserController = async (req, res) => {
 
 exports.addUserIdentifierController = async (req, res) => {
   try {
-    //   devices must be sent as an array if any []
+    // devices must be sent as an array if any []
     const { identifier, devices } = req.body;
+    console.log(identifier, devices)
+    // must start with U
     if (!identifier) throw new Error("Must provide user identifier");
     const newUser = await User.findOne({ identifier: identifier });
     if (!newUser) throw new Error("User not found");
     const user = req.user;
     const isUser = user.users.find((u) => newUser._id.equals(u));
     if (isUser) throw new Error("User already exists");
-
     user.users.push(newUser);
     user.save();
     let arrayDevices = [];
@@ -51,6 +52,7 @@ exports.addUserIdentifierController = async (req, res) => {
         }
       });
     }
+    console.log(arrayDevices);
 
     arrayDevices = Promise.all(arrayDevices).then((item) => item);
     res.status(200).send({
