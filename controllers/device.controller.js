@@ -44,21 +44,22 @@ exports.addDeviceController = async (req, res) => {
       process.env.JWT_SECRET
     );
     const user = await User.findById(decoded.userId);
-
-    const device = await Device({
+    const isDevice = await Device.findOne({ macAddress });
+    if (isDevice) throw new Error("Device already exists");
+    const newDevice = await Device({
       deviceName,
       macAddress,
       users: { id: user._id, role: "owner" },
     });
 
-    device.save();
-    user.devices.push(device._id);
-    user.save();
+    await newDevice.save();
+    user.devices.push(newDevice._id);
+    await user.save();
 
     res.status(201).send({
       status: true,
       message: "device added successfully",
-      data: device,
+      data: newDevice,
     });
   } catch (err) {
     res.status(500).send({ status: false, message: err });
