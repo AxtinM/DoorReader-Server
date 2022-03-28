@@ -18,6 +18,7 @@ exports.addUserIdentifierController = async (req, res) => {
   try {
     // devices must be sent as an array if any []
     const { identifier, devices } = req.body;
+    
     console.log(identifier, devices)
     // must start with U
     if (!identifier) throw new Error("Must provide user identifier");
@@ -31,8 +32,8 @@ exports.addUserIdentifierController = async (req, res) => {
     let arrayDevices = [];
     if (devices) {
       arrayDevices = devices.map(async (mac) => {
-        let obj = Device.findOne({ macAddress: mac });
-        obj = await obj;
+        let obj = await Device.findOne({ macAddress: mac });
+        console.log(obj)
         for (let i = 0; i < obj.users.length; i++) {
           if (
             user._id.equals(obj.users[i].id) &&
@@ -42,23 +43,25 @@ exports.addUserIdentifierController = async (req, res) => {
               { identifier: identifier },
               {
                 $set: {
-                  devices: [...newUser.devices, obj.users[i].id],
+                  devices: [...newUser.devices, obj._id],
                 },
               }
             );
-            const device = await Device.findOne({ macAddress: mac });
-            device.users.push({ id: obj.users[i].id, role: "user" });
+            obj.users.push({ id: obj.users[i].id, role: "user" });
+            obj.save();
+            break;
           }
         }
       });
     }
-    console.log(arrayDevices);
-
+    arrayDevices = await arrayDevices
     arrayDevices = Promise.all(arrayDevices).then((item) => item);
+    console.log(arrayDevices);
     res.status(200).send({
       status: true,
       message: "User added successfully",
-      data: await arrayDevices,
+      data: arrayDevices,
+      newUser: newUser
     });
   } catch (err) {
     res.status(500).send({ status: false, message: err.message });
