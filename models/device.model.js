@@ -13,10 +13,6 @@ const deviceSchema = new Schema({
     required: true,
     unique: true,
   },
-  /*
-   * @keys {id=userId, role={owner, user}}
-   */
-  users: [{ type: Object }],
 });
 
 deviceSchema.pre("deleteOne", async function (next) {
@@ -25,19 +21,24 @@ deviceSchema.pre("deleteOne", async function (next) {
       this._conditions && this._conditions._id ? this._conditions._id : null;
     console.log("deleted deviceId: " + deletedDeviceId);
     if (deletedDeviceId) {
-      const querry = await User.find({ devices: deletedDeviceId });
-      for (let i = 0; i < querry.length; i++) {
-        let newDevices = querry[i].devices;
-        const devices = newDevices.filter((obj) => {
-          console.log(!obj.equals(deletedDeviceId));
-          return !obj.equals(deletedDeviceId);
-        });
-
-        await User.findOneAndUpdate(
-          { _id: querry[i]._id },
-          { $set: { devices: devices } }
+      const querry = await User.find({
+        $or: [
+          { ownedDevices: deletedDeviceId },
+          { accessibleDevices: deletedDeviceId },
+        ],
+      });
+      for (const user of querry) {
+        const filterOwnedDevices = user.ownedDevices.filter(
+          (id) => !id.equals(deletedDeviceId)
         );
-        querry[i].save();
+        console.log("filtered OwnedDevices : " + filterOwnedDevices);
+        const filterAccessibleDevices = user.accessibleDevices.filter(
+          (id) => !id.equals(deletedDeviceId)
+        );
+        console.log("filtered AccessibleDevices : " + filterAccessibleDevices);
+        user.ownedDevices = filterOwnedDevices;
+        user.accessibleDevices = filterAccessibleDevices;
+        user.save();
       }
     }
     next();

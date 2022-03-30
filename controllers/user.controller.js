@@ -10,7 +10,7 @@ exports.allUserController = async (req, res) => {
     );
     res.status(200).send({ status: true, data: users.users });
   } catch (err) {
-    res.status(500).send({ status: false, message: err.message });
+    res.send({ status: false, message: err.message });
   }
 };
 
@@ -18,8 +18,8 @@ exports.addUserIdentifierController = async (req, res) => {
   try {
     // devices must be sent as an array if any []
     const { identifier, devices } = req.body;
-    
-    console.log(identifier, devices)
+
+    console.log(identifier, devices);
     // must start with U
     if (!identifier) throw new Error("Must provide user identifier");
     const newUser = await User.findOne({ identifier: identifier });
@@ -29,42 +29,23 @@ exports.addUserIdentifierController = async (req, res) => {
     if (isUser) throw new Error("User already exists");
     user.users.push(newUser);
     user.save();
-    let arrayDevices = [];
     if (devices) {
-      arrayDevices = devices.map(async (mac) => {
-        let obj = await Device.findOne({ macAddress: mac });
-        console.log(obj)
-        for (let i = 0; i < obj.users.length; i++) {
-          if (
-            user._id.equals(obj.users[i].id) &&
-            obj.users[i].role === "owner"
-          ) {
-            await User.findOneAndUpdate(
-              { identifier: identifier },
-              {
-                $set: {
-                  devices: [...newUser.devices, obj._id],
-                },
-              }
-            );
-            obj.users.push({ id: obj.users[i].id, role: "user" });
-            obj.save();
-            break;
-          }
-        }
+      const arrayOfDevicesIds = await Device.find({
+        macAddress: { $in: devices },
       });
+      for (const id of arrayOfDevicesIds) {
+        newUser.accessibleDevices.push(id);
+      }
     }
-    arrayDevices = await arrayDevices
-    arrayDevices = Promise.all(arrayDevices).then((item) => item);
-    console.log(arrayDevices);
+    newUser.save();
+
     res.status(200).send({
       status: true,
       message: "User added successfully",
-      data: arrayDevices,
-      newUser: newUser
+      newUser: newUser,
     });
   } catch (err) {
-    res.status(500).send({ status: false, message: err.message });
+    res.send({ status: false, message: err.message });
   }
 };
 
@@ -85,7 +66,7 @@ exports.addUserEmailController = async (req, res) => {
       message: "user added successfully",
     });
   } catch (err) {
-    res.status(500).send({ status: false, message: err.message });
+    res.send({ status: false, message: err.message });
   }
 };
 
@@ -95,22 +76,50 @@ exports.removeUserController = async (req, res) => {
     const userToDelete = await User.findOne({ identifier });
     if (!userToDelete) throw new Error("user not found");
     const user = req.user;
-    const newUsers = user.users.filter((usr) => !usr.equals(userToDelete._id));
-    if (newUsers.length === user.users.length) {
-      res.sendStatus(204);
-    }
-    await User.findByIdAndUpdate(
-      { _id: user._id },
-      { $set: { users: newUsers } }
-    );
+
+    const users = user.users.filter((userId) => userId === userToDelete._id);
+    user.users = users;
 
     await user.save();
+
     res.status(202).send({
       status: true,
       message: "User deleted successfully",
       data: user.users,
     });
   } catch (err) {
-    res.status(500).send({ status: false, message: err.message });
+    res.send({ status: false, message: err.message });
+  }
+};
+
+exports.changeUserAccessController = async (req, res) => {
+  try {
+    // devices must be sent as an array if any []
+    const { identifier, devices } = req.body;
+
+    console.log(identifier, devices);
+    // must start with U
+    if (!identifier) throw new Error("Must provide user identifier");
+    const newUser = await User.findOne({ identifier: identifier });
+    if (!newUser) throw new Error("User not found");
+    const user = req.user;
+    user.save();
+    if (devices) {
+      const arrayOfDevicesIds = await Device.find({
+        macAddress: { $in: devices },
+      });
+      newUser.accessibleDevices = arrayOfDevicesIds;
+    } else {
+      newUser.accessibleDevices = [];
+    }
+    newUser.save();
+
+    res.status(200).send({
+      status: true,
+      message: "User changed successfully",
+      access: newUser.accessibleDevices,
+    });
+  } catch (err) {
+    res.send({ status: false, message: err.message });
   }
 };
