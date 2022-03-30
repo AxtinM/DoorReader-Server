@@ -27,7 +27,7 @@ const userSchema = mongoose.Schema({
   tokens: [{ type: Object }],
   ownedDevices: [{ type: mongoose.Types.ObjectId, ref: "Device" }],
   accessibleDevices: [{ type: mongoose.Types.ObjectId, ref: "Device" }],
-  rfidCard: [{ type: String }],
+  rfidTags: [{ type: mongoose.Types.ObjectId, ref: "RfidTag" }],
   users: [{ type: mongoose.Types.ObjectId, ref: "User" }],
 });
 
