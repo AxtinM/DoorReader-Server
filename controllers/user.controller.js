@@ -4,10 +4,13 @@ const Device = require("../models/device.model");
 exports.allUserController = async (req, res) => {
   try {
     const user = req.user;
-    const users = await User.findById(user._id).populate(
-      "users",
-      "_id identifier fname lname"
-    );
+    const users = await User.findById(user._id).populate({
+      path: "users",
+      select: "_id identifier fname lname accessibleDevices",
+      populate: {
+        path: "accessibleDevices",
+      },
+    });
     res.status(200).send({ status: true, data: users.users });
   } catch (err) {
     res.send({ status: false, message: err.message });
@@ -18,8 +21,8 @@ exports.addUserIdentifierController = async (req, res) => {
   try {
     // devices must be sent as an array if any []
     const { identifier, devices } = req.body;
-
     console.log(identifier, devices);
+
     // must start with U
     if (!identifier) throw new Error("Must provide user identifier");
     const newUser = await User.findOne({ identifier: identifier });
@@ -37,6 +40,7 @@ exports.addUserIdentifierController = async (req, res) => {
         newUser.accessibleDevices.push(id);
       }
     }
+
     newUser.save();
 
     res.status(200).send({
@@ -86,6 +90,7 @@ exports.removeUserController = async (req, res) => {
       status: true,
       message: "User deleted successfully",
       data: user.users,
+      deteltedUser: userToDelete,
     });
   } catch (err) {
     res.send({ status: false, message: err.message });
@@ -97,7 +102,6 @@ exports.changeUserAccessController = async (req, res) => {
     // devices must be sent as an array if any []
     const { identifier, devices } = req.body;
 
-    console.log(identifier, devices);
     // must start with U
     if (!identifier) throw new Error("Must provide user identifier");
     const newUser = await User.findOne({ identifier: identifier });
@@ -112,6 +116,7 @@ exports.changeUserAccessController = async (req, res) => {
     } else {
       newUser.accessibleDevices = [];
     }
+
     newUser.save();
 
     res.status(200).send({

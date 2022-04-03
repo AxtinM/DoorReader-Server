@@ -20,5 +20,8 @@
     "optional": "cpp",
     "type_traits": "cpp",
     "atomic": "cpp"
-  }
+  },
+  "editor.bracketPairColorization.enabled": true,
+  "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+  "C_Cpp.dimInactiveRegions": false
 }

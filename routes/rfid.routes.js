@@ -1,8 +1,13 @@
-const { addRfidCardController, getAllRfidCards } = require("../controllers/rfidTag.controller");
+const {
+  addRfidCardController,
+  getAllRfidCards,
+  removeRfidCard,
+} = require("../controllers/rfidTag.controller");
 const { isAuth } = require("../middlewares/auth");
 const router = require("express").Router();
 
+router.get("/", isAuth, getAllRfidCards);
 router.post("/add", isAuth, addRfidCardController);
-router.get("/", isAuth, getAllRfidCards)
+router.delete("/remove/:tagId", isAuth, removeRfidCard);
 
 module.exports = router;
