@@ -5,7 +5,7 @@ exports.isAuth = async (req, res, next) => {
   if (req.headers && req.headers.authorization) {
     const token = req.headers.authorization.split(" ")[1];
     try {
-      const decode = jwt.decode(token, process.env.JWT_SECRET_KEY);
+      const decode = jwt.decode(token, process.env.JWT_SECRET);
       const user = await User.findById(decode.userId);
       if (!user) {
         return res
@@ -25,7 +25,7 @@ exports.isAuth = async (req, res, next) => {
         .status(500)
         .send({ success: false, message: "Internal Server Error" });
     }
-  } else {  
+  } else {
     res.status(400).send({ status: false, message: "Invalid authorization" });
   }
 };
