@@ -10,3 +10,5 @@ package-lock.json
 *.log
 *.gz
 
+commit.sh
+
